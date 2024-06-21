@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    container_name: web
+    command: uvicorn main:app --reload --workers 1 --host 0.0.0.0 --port 8000
+    volumes:
+      - .:/usr/src/app/
+    ports:
+      - "8002:8000"
+    networks:
+      - default
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus_data:/etc/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+    networks:
+      - default
+
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - default
+
+volumes:
+  prometheus_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./prometheus_data
+  grafana_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./grafana_data
+
+networks:
+  default: 
+    name: hello_fastapi
+    driver: bridge
+    # 和外部网络互通
+    external: true
